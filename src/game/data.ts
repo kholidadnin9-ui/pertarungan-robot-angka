@@ -12,8 +12,28 @@ export interface RobotDef {
   muzzle: { x: number; y: number };
 }
 
-// Path asset otomatis mengikuti alamat GitHub Pages
-const asset = (path: string) => `${import.meta.env.BASE_URL}${path}`;
+/*
+ * Semua gambar berada di folder:
+ *
+ * public/
+ * ├── robots/
+ * │   ├── volt.png
+ * │   ├── aurex.png
+ * │   ├── ruby.png
+ * │   ├── frost.png
+ * │   ├── lumin.png
+ * │   └── steel.png
+ *
+ * import.meta.env.BASE_URL otomatis menjadi:
+ *
+ * /pertarungan-robot-angka/
+ *
+ * ketika dijalankan di GitHub Pages.
+ */
+const asset = (file: string): string => {
+  const base = import.meta.env.BASE_URL || '/';
+  return `${base}${file.replace(/^\/+/, '')}`;
+};
 
 export const ROBOTS: RobotDef[] = [
   {
@@ -29,6 +49,7 @@ export const ROBOTS: RobotDef[] = [
     armor: 3,
     muzzle: { x: 0.925, y: 0.255 },
   },
+
   {
     id: 'aurex',
     name: 'AUREX',
@@ -42,6 +63,7 @@ export const ROBOTS: RobotDef[] = [
     armor: 4,
     muzzle: { x: 0.925, y: 0.255 },
   },
+
   {
     id: 'ruby',
     name: 'RUBY',
@@ -55,6 +77,7 @@ export const ROBOTS: RobotDef[] = [
     armor: 3,
     muzzle: { x: 0.925, y: 0.255 },
   },
+
   {
     id: 'frost',
     name: 'FROST',
@@ -68,6 +91,7 @@ export const ROBOTS: RobotDef[] = [
     armor: 4,
     muzzle: { x: 0.925, y: 0.26 },
   },
+
   {
     id: 'lumin',
     name: 'LUMIN',
@@ -81,6 +105,7 @@ export const ROBOTS: RobotDef[] = [
     armor: 4,
     muzzle: { x: 0.925, y: 0.255 },
   },
+
   {
     id: 'steel',
     name: 'STEEL',
@@ -96,7 +121,10 @@ export const ROBOTS: RobotDef[] = [
   },
 ];
 
-/* Indonesian number words for 1-20 */
+/* =========================================================
+ * KATA BILANGAN 1–20
+ * ========================================================= */
+
 export const NUM_WORDS: string[] = [
   '',
   'satu',
@@ -121,6 +149,10 @@ export const NUM_WORDS: string[] = [
   'dua puluh',
 ];
 
+/* =========================================================
+ * LEVEL
+ * ========================================================= */
+
 export interface LevelDef {
   id: number;
   label: string;
@@ -139,6 +171,7 @@ export const LEVELS: LevelDef[] = [
     color: '#4ade80',
     withCount: true,
   },
+
   {
     id: 2,
     label: 'LEVEL 2',
@@ -147,6 +180,7 @@ export const LEVELS: LevelDef[] = [
     color: '#38bdf8',
     withCount: true,
   },
+
   {
     id: 3,
     label: 'LEVEL 3',
@@ -155,6 +189,7 @@ export const LEVELS: LevelDef[] = [
     color: '#a78bfa',
     withCount: false,
   },
+
   {
     id: 4,
     label: 'LEVEL 4',
@@ -163,6 +198,7 @@ export const LEVELS: LevelDef[] = [
     color: '#fb923c',
     withCount: false,
   },
+
   {
     id: 5,
     label: 'LEVEL 5',
@@ -173,8 +209,17 @@ export const LEVELS: LevelDef[] = [
   },
 ];
 
+/* =========================================================
+ * GAME SETTINGS
+ * ========================================================= */
+
 export const TOTAL_QUESTIONS = 10;
+
 export const MAX_HP = 100;
+
+/* =========================================================
+ * PESAN BENAR
+ * ========================================================= */
 
 export const PRAISES = [
   'LUAR BIASA!',
@@ -185,6 +230,10 @@ export const PRAISES = [
   'ROBOT SUPER!',
   'MANTAP!',
 ];
+
+/* =========================================================
+ * PESAN SALAH
+ * ========================================================= */
 
 export const OOPS = [
   'UPS! Coba lagi ya!',
