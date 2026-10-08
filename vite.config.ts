@@ -10,8 +10,15 @@ const __dirname = path.dirname(__filename);
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: "/pertarungan robot angka/",
-  plugins: [react(), tailwindcss(), viteSingleFile()],
+  // Nama repository GitHub Pages
+  base: "/pertarungan-robot-angka/",
+
+  plugins: [
+    react(),
+    tailwindcss(),
+    viteSingleFile(),
+  ],
+
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
