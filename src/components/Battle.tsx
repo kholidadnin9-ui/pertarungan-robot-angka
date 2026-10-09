@@ -66,7 +66,7 @@ const RobotFigure = forwardRef<HTMLDivElement, FigureProps>(
     const filterStyle = { filter: baseFilter || undefined };
 
     return (
-      <div ref={ref} className="relative" style={{ width: size }}>
+      <div ref={ref} className="battle-robot-figure relative" style={{ width: size }}>
         {/* platform glow */}
         <div
           className="absolute right-[8%] bottom-[-4%] left-[8%] h-[12%] rounded-[100%] blur-md"
@@ -473,7 +473,36 @@ export function Battle({
         : true);
 
   return (
-    <div className="fixed inset-0 h-[100dvh] w-screen overflow-hidden bg-[#05070f]">
+    <div className="battle-screen fixed inset-0 h-[100dvh] w-screen overflow-hidden bg-[#05070f]">
+      <style>{`
+        /* Khusus HP landscape: utamakan soal dan pilihan jawaban agar selalu terbaca. */
+        @media (orientation: landscape) and (max-height: 520px) {
+          .battle-hud { padding: 4px 10px 0 !important; align-items: center !important; }
+          .battle-hud .font-tech { line-height: 1.05 !important; }
+          .battle-question-panel {
+            top: 2px !important;
+            max-width: 94vw !important;
+            max-height: 43dvh !important;
+            overflow: auto !important;
+            padding: 5px 10px !important;
+            border-radius: 12px !important;
+          }
+          .battle-question-panel .battle-hint { font-size: 8px !important; letter-spacing: .12em !important; }
+          .battle-question-panel .battle-prompt { font-size: clamp(19px, 5.2dvh, 30px) !important; line-height: 1.05 !important; }
+          .battle-question-panel .battle-count-items { margin: 2px 0 !important; gap: 3px !important; }
+          .battle-question-panel .battle-count-items svg { width: clamp(15px, 4dvh, 23px) !important; height: clamp(15px, 4dvh, 23px) !important; }
+          .battle-question-panel .battle-count-items .battle-count-symbol { font-size: clamp(20px, 5dvh, 28px) !important; }
+          .battle-question-panel .battle-listen { margin-top: 3px !important; padding: 2px 8px !important; font-size: 9px !important; }
+          .battle-robots { padding: 0 5vw 0 !important; }
+          .battle-robot-figure { width: clamp(38px, 15dvh, 78px) !important; }
+          .battle-answers { gap: 5px !important; padding: 3px 8px max(env(safe-area-inset-bottom), 3px) !important; }
+          .battle-answers .reticle { min-height: 30px !important; padding: 3px 5px !important; border-bottom-width: 3px !important; border-radius: 9px !important; }
+          .battle-answers .reticle span:not(.rc) { font-size: clamp(12px, 3.6dvh, 19px) !important; line-height: 1 !important; }
+          .battle-answer-bank { min-width: 0 !important; flex: 1 1 0 !important; padding: 3px !important; border-radius: 9px !important; }
+          .battle-answer-bank > div:first-child { margin-bottom: 3px !important; font-size: 8px !important; letter-spacing: .1em !important; }
+          .battle-answer-bank > div:last-child { gap: 3px !important; }
+        }
+      `}</style>
       {/* battlefield background */}
       <img
         src={`${import.meta.env.BASE_URL}bg/battlefield.jpg`}
@@ -493,7 +522,7 @@ export function Battle({
         }`}
       >
         {/* ------- HUD ------- */}
-        <div className="flex items-start justify-between gap-2 px-3 pt-3 md:px-6">
+        <div className="battle-hud flex items-start justify-between gap-2 px-3 pt-3 md:px-6">
           <PlayerChip
             side="P1"
             name={mode === 2 ? 'PEMAIN 1' : 'KAMU'}
@@ -575,18 +604,18 @@ export function Battle({
             key={qIdx}
             initial={{ y: -30, opacity: 0, scale: 0.9 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
-            className={`holo scanlines absolute top-6 left-1/2 z-20 w-max max-w-[94vw] -translate-x-1/2 overflow-hidden rounded-2xl px-3 py-1.5 text-center sm:top-7 sm:px-4 sm:py-2 md:top-10 md:rounded-3xl md:px-10 md:py-4 ${
+            className={`battle-question-panel holo scanlines absolute top-6 left-1/2 z-20 w-max max-w-[94vw] -translate-x-1/2 overflow-hidden rounded-2xl px-3 py-1.5 text-center sm:top-7 sm:px-4 sm:py-2 md:top-10 md:rounded-3xl md:px-10 md:py-4 ${
               done ? 'opacity-30' : ''
             }`}
           >
             <div className="scan-sweep pointer-events-none absolute inset-y-0 w-1/3 bg-linear-to-r from-transparent via-cyan-300/10 to-transparent" />
 
-            <div className="font-tech text-[10px] font-bold tracking-[0.3em] text-cyan-300 md:text-xs">
+            <div className="battle-hint font-tech text-[10px] font-bold tracking-[0.3em] text-cyan-300 md:text-xs">
               {q.hint}
             </div>
 
             {q.kind === 'count' ? (
-              <div className="my-1.5 flex flex-wrap items-center justify-center gap-1.5">
+              <div className="battle-count-items my-1.5 flex flex-wrap items-center justify-center gap-1.5">
                 {Array.from({ length: q.number }, (_, i) => (
                   <motion.span
                     key={i}
@@ -611,7 +640,7 @@ export function Battle({
                   </motion.span>
                 ))}
 
-                <span className="font-tech ml-2 text-4xl font-black text-cyan-200 md:text-5xl">
+                <span className="battle-count-symbol font-tech ml-2 text-4xl font-black text-cyan-200 md:text-5xl">
                   =
                 </span>
 
@@ -626,7 +655,7 @@ export function Battle({
               </div>
             ) : (
               <div
-                className={`font-tech font-black tracking-wide text-white ${
+                className={`battle-prompt font-tech font-black tracking-wide text-white ${
                   q.prompt.length > 12
                     ? 'text-2xl md:text-4xl'
                     : 'text-4xl md:text-6xl'
@@ -642,7 +671,7 @@ export function Battle({
 
             <button
               onClick={() => speak(q.speech)}
-              className="mt-1 inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-cyan-400/15 px-3 py-1 text-[10px] font-bold text-cyan-200 transition hover:bg-cyan-400/30 md:text-xs"
+              className="battle-listen mt-1 inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-cyan-400/15 px-3 py-1 text-[10px] font-bold text-cyan-200 transition hover:bg-cyan-400/30 md:text-xs"
             >
               <Volume2 className="h-3.5 w-3.5" />
               Dengarkan
@@ -650,7 +679,7 @@ export function Battle({
           </motion.div>
 
           {/* robots */}
-          <div className="absolute inset-x-0 bottom-0 flex items-end justify-between px-[4vw] pb-2 md:px-[8vw]">
+          <div className="battle-robots absolute inset-x-0 bottom-0 flex items-end justify-between px-[4vw] pb-2 md:px-[8vw]">
             <RobotFigure
               ref={p1Ref}
               robot={robot1}
@@ -799,7 +828,7 @@ export function Battle({
 
         {/* ------- answers ------- */}
         {mode === 1 ? (
-          <div className="relative z-30 flex shrink-0 justify-center gap-2 px-2 pb-[max(env(safe-area-inset-bottom),0.35rem)] pt-1 sm:gap-3 md:gap-8 md:pb-7">
+          <div className="battle-answers relative z-30 flex shrink-0 justify-center gap-2 px-2 pb-[max(env(safe-area-inset-bottom),0.35rem)] pt-1 sm:gap-3 md:gap-8 md:pb-7">
             {q.options.map((opt, i) => (
               <OptionBtn
                 key={`${qIdx}-${i}`}
@@ -828,7 +857,7 @@ export function Battle({
             ))}
           </div>
         ) : (
-          <div className="relative z-30 flex shrink-0 flex-col gap-1 px-2 pb-[max(env(safe-area-inset-bottom),0.25rem)] pt-1 landscape:flex-row landscape:items-end landscape:justify-between landscape:gap-2 md:flex-row md:items-end md:justify-between md:gap-4 md:px-6 md:pb-4">
+          <div className="battle-answers relative z-30 flex shrink-0 flex-col gap-1 px-2 pb-[max(env(safe-area-inset-bottom),0.25rem)] pt-1 landscape:flex-row landscape:items-end landscape:justify-between landscape:gap-2 md:flex-row md:items-end md:justify-between md:gap-4 md:px-6 md:pb-4">
             <AnswerBank
               side="p1"
               label="PEMAIN 1"
@@ -1364,7 +1393,7 @@ function AnswerBank({
 
   return (
     <div
-      className={`rounded-2xl border-2 p-1.5 md:p-2 ${
+      className={`battle-answer-bank rounded-2xl border-2 p-1.5 md:p-2 ${
         claimedByMe ? '' : 'opacity-95'
       }`}
       style={{
