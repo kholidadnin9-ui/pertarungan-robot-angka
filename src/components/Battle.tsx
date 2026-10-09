@@ -473,7 +473,7 @@ export function Battle({
         : true);
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-[#05070f]">
+    <div className="fixed inset-0 h-[100dvh] w-screen overflow-hidden bg-[#05070f]">
       {/* battlefield background */}
       <img
         src={`${import.meta.env.BASE_URL}bg/battlefield.jpg`}
@@ -488,7 +488,7 @@ export function Battle({
       {/* shakeable arena */}
       <div
         key={shakeKey}
-        className={`relative z-10 flex h-full flex-col ${
+        className={`relative z-10 flex h-full min-h-0 flex-col ${
           shakeKey > 0 ? 'screen-shake' : ''
         }`}
       >
@@ -554,7 +554,7 @@ export function Battle({
         </div>
 
         {/* ------- arena mid ------- */}
-        <div ref={arenaRef} className="relative flex-1">
+        <div ref={arenaRef} className="relative min-h-0 flex-1">
           {/* race hint (2P realtime) */}
           {mode === 2 && !done && phase === 'question' && (
             <div className="absolute top-1 left-1/2 z-20 -translate-x-1/2">
@@ -575,7 +575,7 @@ export function Battle({
             key={qIdx}
             initial={{ y: -30, opacity: 0, scale: 0.9 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
-            className={`holo scanlines absolute top-7 left-1/2 z-20 w-max max-w-[94vw] -translate-x-1/2 overflow-hidden rounded-2xl px-4 py-2 text-center md:top-10 md:rounded-3xl md:px-10 md:py-4 ${
+            className={`holo scanlines absolute top-6 left-1/2 z-20 w-max max-w-[94vw] -translate-x-1/2 overflow-hidden rounded-2xl px-3 py-1.5 text-center sm:top-7 sm:px-4 sm:py-2 md:top-10 md:rounded-3xl md:px-10 md:py-4 ${
               done ? 'opacity-30' : ''
             }`}
           >
@@ -656,8 +656,8 @@ export function Battle({
               robot={robot1}
               size={
                 mode === 2
-                  ? 'clamp(128px, min(25vw, 30vh), 360px)'
-                  : 'clamp(160px, min(30vw, 34vh), 430px)'
+                  ? 'clamp(80px, min(22vw, 28dvh), 300px)'
+                  : 'clamp(90px, min(25vw, 32dvh), 340px)'
               }
               active={mode === 1 && turn === 'p1' && !done}
               state={stateFor('p1')}
@@ -671,8 +671,8 @@ export function Battle({
               mirrored
               size={
                 mode === 2
-                  ? 'clamp(128px, min(25vw, 30vh), 360px)'
-                  : 'clamp(160px, min(30vw, 34vh), 430px)'
+                  ? 'clamp(80px, min(22vw, 28dvh), 300px)'
+                  : 'clamp(90px, min(25vw, 32dvh), 340px)'
               }
               active={mode === 1 && turn === 'p2' && !done}
               state={stateFor('p2')}
@@ -799,7 +799,7 @@ export function Battle({
 
         {/* ------- answers ------- */}
         {mode === 1 ? (
-          <div className="relative z-30 flex justify-center gap-2 px-2 pb-[max(env(safe-area-inset-bottom),0.9rem)] pt-1 md:gap-8 md:pb-7">
+          <div className="relative z-30 flex shrink-0 justify-center gap-2 px-2 pb-[max(env(safe-area-inset-bottom),0.35rem)] pt-1 sm:gap-3 md:gap-8 md:pb-7">
             {q.options.map((opt, i) => (
               <OptionBtn
                 key={`${qIdx}-${i}`}
@@ -828,7 +828,7 @@ export function Battle({
             ))}
           </div>
         ) : (
-          <div className="relative z-30 flex flex-col gap-1.5 px-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-1 md:flex-row md:items-end md:justify-between md:gap-4 md:px-6 md:pb-4">
+          <div className="relative z-30 flex shrink-0 flex-col gap-1 px-2 pb-[max(env(safe-area-inset-bottom),0.25rem)] pt-1 landscape:flex-row landscape:items-end landscape:justify-between landscape:gap-2 md:flex-row md:items-end md:justify-between md:gap-4 md:px-6 md:pb-4">
             <AnswerBank
               side="p1"
               label="PEMAIN 1"
@@ -1290,8 +1290,8 @@ function OptionBtn({
       }
       className={`reticle relative flex-1 cursor-pointer rounded-2xl border-b-[6px] bg-linear-to-br md:flex-none ${
         big
-          ? 'min-w-24 px-4 py-3 md:min-w-44 md:rounded-3xl md:border-b-8 md:px-8 md:py-5'
-          : 'min-w-0 px-2 py-2 md:min-w-36 md:rounded-3xl md:border-b-8 md:px-5 md:py-4'
+          ? 'min-w-0 px-2 py-1.5 sm:px-3 sm:py-2 md:min-w-44 md:rounded-3xl md:border-b-8 md:px-8 md:py-5'
+          : 'min-w-0 px-1.5 py-1.5 sm:px-2 sm:py-2 md:min-w-36 md:rounded-3xl md:border-b-8 md:px-5 md:py-4'
       } ${st.grad} ${
         disabled && !isAnswer ? 'opacity-50' : ''
       } ${
@@ -1316,15 +1316,15 @@ function OptionBtn({
         className={`font-black text-white ${
           big
             ? opt.length > 10
-              ? 'font-display text-lg md:text-2xl'
+              ? 'font-display text-sm sm:text-lg md:text-2xl'
               : opt.length > 4
-                ? 'font-display text-xl uppercase md:text-3xl'
-                : 'font-tech text-4xl md:text-5xl'
+                ? 'font-display text-base uppercase sm:text-xl md:text-3xl'
+                : 'font-tech text-2xl sm:text-4xl md:text-5xl'
             : opt.length > 10
-              ? 'font-display text-sm md:text-2xl'
+              ? 'font-display text-xs sm:text-sm md:text-2xl'
               : opt.length > 4
-                ? 'font-display text-base uppercase md:text-2xl'
-                : 'font-tech text-2xl md:text-4xl'
+                ? 'font-display text-sm uppercase sm:text-base md:text-2xl'
+                : 'font-tech text-xl sm:text-2xl md:text-4xl'
         }`}
         style={{
           textShadow: '0 3px 0 rgba(0,0,0,.3)',
