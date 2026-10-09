@@ -493,8 +493,8 @@ export function Battle({
           .battle-question-panel .battle-count-items svg { width: clamp(15px, 4dvh, 23px) !important; height: clamp(15px, 4dvh, 23px) !important; }
           .battle-question-panel .battle-count-items .battle-count-symbol { font-size: clamp(20px, 5dvh, 28px) !important; }
           .battle-question-panel .battle-listen { margin-top: 3px !important; padding: 2px 8px !important; font-size: 9px !important; }
-          .battle-robots { padding: 0 5vw 0 !important; }
-          .battle-robot-figure { width: clamp(38px, 15dvh, 78px) !important; }
+          .battle-robots { padding: 0 4vw 2px !important; }
+          .battle-robot-figure { width: clamp(68px, 22dvh, 112px) !important; }
           .battle-answers { gap: 5px !important; padding: 3px 8px max(env(safe-area-inset-bottom), 3px) !important; }
           .battle-answers .reticle { min-height: 30px !important; padding: 3px 5px !important; border-bottom-width: 3px !important; border-radius: 9px !important; }
           .battle-answers .reticle span:not(.rc) { font-size: clamp(12px, 3.6dvh, 19px) !important; line-height: 1 !important; }
