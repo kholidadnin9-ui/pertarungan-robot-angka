@@ -191,6 +191,7 @@ export function Battle({
   const [shakeKey, setShakeKey] = useState(0);
   const [muted, setMutedState] = useState(isMuted());
   const [aiSecondsLeft, setAiSecondsLeft] = useState<number | null>(null);
+  const [raceSecondsLeft, setRaceSecondsLeft] = useState<number>(computerThinkTime);
 
   const arenaRef = useRef<HTMLDivElement>(null);
   const p1Ref = useRef<HTMLDivElement>(null);
@@ -268,10 +269,33 @@ export function Battle({
   function fire(shooter: Side, optIdx: number) {
     if (phase !== 'question' || done || claimedRef.current) return;
 
+    const correct = optIdx === q.answer;
+
+    // Dalam mode pemain vs komputer, jawaban salah tidak mengakhiri soal.
+    // Pemain/komputer masih dapat mencoba lagi selama waktu lomba tersedia.
+    if (mode === 1 && !correct) {
+      setPicked({ side: shooter, idx: optIdx });
+      sfx.wrong();
+      setBanner({
+        text: (shooter === 'p1' ? '' : 'KOMPUTER ') + 'BELUM TEPAT!',
+        sub: 'Coba lagi, waktu masih berjalan!',
+        good: false,
+        key: Date.now(),
+      });
+      later(() => {
+        setPicked((current) =>
+          current?.side === shooter && current.idx === optIdx ? null : current
+        );
+        setBanner((current) =>
+          current?.text.includes('BELUM TEPAT') ? null : current
+        );
+      }, 650);
+      return;
+    }
+
     claimedRef.current = shooter;
     stopSpeak();
-
-    const correct = optIdx === q.answer;
+    setAiSecondsLeft(null);
 
     const sRef = shooter === 'p1' ? p1Ref : p2Ref;
     const tRef = shooter === 'p1' ? p2Ref : p1Ref;
@@ -380,8 +404,8 @@ export function Battle({
         setQIdx((i) => i + 1);
 
         if (mode === 1) {
-          // Mode versus komputer: giliran bergantian antara pemain dan AI.
-          setTurn(shooter === 'p1' ? 'p2' : 'p1');
+          setTurn('p1');
+          setRaceSecondsLeft(computerThinkTime);
         }
 
         setPhase('question');
@@ -389,42 +413,95 @@ export function Battle({
     }, CHARGE_MS + TRAVEL_MS + 60 + 2100);
   }
 
-  // Komputer otomatis menjawab pada gilirannya dalam mode 1 pemain.
-  // Nilai computerThinkTime dapat diatur dari App.tsx menjadi 5, 10, atau 15 detik.
+  // Adu cepat: pemain dan komputer menjawab soal yang sama dalam batas waktu.
+  // Komputer memiliki jeda berpikir dan dapat mencoba lagi jika jawabannya salah.
   useEffect(() => {
-    if (mode !== 1 || turn !== 'p2' || phase !== 'question' || done || !q) {
+    if (mode !== 1 || phase !== 'question' || done || !q) {
       setAiSecondsLeft(null);
       return;
     }
 
-    let secondsLeft = computerThinkTime;
-    setAiSecondsLeft(secondsLeft);
+    let cancelled = false;
+    let aiTimeoutId = 0;
+    const startedAt = Date.now();
+    const limitMs = computerThinkTime * 1000;
+    const countdownId = window.setInterval(() => {
+      if (cancelled || claimedRef.current) return;
+      const remaining = Math.max(0, Math.ceil((limitMs - (Date.now() - startedAt)) / 1000));
+      setAiSecondsLeft(remaining);
+      setRaceSecondsLeft(remaining);
+    }, 200);
 
-    const countdown = window.setInterval(() => {
-      secondsLeft = Math.max(0, secondsLeft - 1);
-      setAiSecondsLeft(secondsLeft);
-    }, 1000);
+    const firstThinkMs = Math.min(
+      limitMs - 250,
+      900 + Math.random() * Math.max(300, limitMs * 0.42),
+    );
 
-    const answerTimer = window.setTimeout(() => {
-      // AI benar sekitar 75% dari waktu; jika salah, pilih opsi salah.
-      let answerIndex: number;
-      if (Math.random() < 0.75) {
-        answerIndex = q.answer;
-      } else {
-        const wrongOptions = q.options
-          .map((_, index) => index)
-          .filter((index) => index !== q.answer);
-        answerIndex = wrongOptions[Math.floor(Math.random() * wrongOptions.length)] ?? q.answer;
-      }
+    const tryAnswer = () => {
+      if (cancelled || claimedRef.current) return;
+      const chooseCorrect = Math.random() < 0.78;
+      const wrongOptions = q.options
+        .map((_, index) => index)
+        .filter((index) => index !== q.answer);
+      const answerIndex = chooseCorrect
+        ? q.answer
+        : (wrongOptions[Math.floor(Math.random() * wrongOptions.length)] ?? q.answer);
+
       fire('p2', answerIndex);
-    }, computerThinkTime * 1000);
+
+      if (!chooseCorrect && !claimedRef.current && !cancelled) {
+        aiTimeoutId = window.setTimeout(tryAnswer, 650 + Math.random() * 450);
+      }
+    };
+
+    setAiSecondsLeft(computerThinkTime);
+    setRaceSecondsLeft(computerThinkTime);
+    aiTimeoutId = window.setTimeout(tryAnswer, firstThinkMs);
 
     return () => {
-      window.clearInterval(countdown);
-      window.clearTimeout(answerTimer);
+      cancelled = true;
+      window.clearInterval(countdownId);
+      window.clearTimeout(aiTimeoutId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, turn, phase, qIdx, done, computerThinkTime]);
+  }, [mode, phase, qIdx, done, computerThinkTime]);
+
+  // Batas waktu bersama untuk satu soal. Jika belum ada jawaban benar, soal terlewat.
+  useEffect(() => {
+    if (mode !== 1 || phase !== 'question' || done || !q) return;
+
+    const timeoutId = window.setTimeout(() => {
+      if (claimedRef.current || doneRef.current) return;
+
+      claimedRef.current = 'p1'; // mengunci soal agar tidak ada jawaban setelah waktu habis
+      setAiSecondsLeft(null);
+      setPhase('resolve');
+      setResults((r) => [...r, 'no']);
+      setBanner({
+        text: 'WAKTU HABIS!',
+        sub: `Jawaban yang benar: ${q.options[q.answer].toUpperCase()}`,
+        good: false,
+        key: Date.now(),
+      });
+
+      later(() => {
+        setBanner(null);
+        setPicked(null);
+        claimedRef.current = null;
+        if (qIdx + 1 >= TOTAL_QUESTIONS) {
+          finishGame();
+        } else {
+          setQIdx((i) => i + 1);
+          setRaceSecondsLeft(computerThinkTime);
+          setTurn('p1');
+          setPhase('question');
+        }
+      }, 1300);
+    }, computerThinkTime * 1000);
+
+    return () => window.clearTimeout(timeoutId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, phase, qIdx, done, computerThinkTime]);
 
   function finishGame() {
     if (doneRef.current) return;
@@ -569,7 +646,7 @@ export function Battle({
             name={mode === 2 ? 'PEMAIN 1' : 'KAMU'}
             robot={robot1}
             hp={hp.p1}
-            active={mode === 2 ? !done : turn === 'p1' && !done}
+            active={mode === 2 ? !done : !done}
             color="#38bdf8"
           />
 
@@ -616,7 +693,7 @@ export function Battle({
             name={mode === 2 ? 'PEMAIN 2' : 'KOMPUTER'}
             robot={robot2}
             hp={hp.p2}
-            active={mode === 2 ? !done : turn === 'p2' && !done}
+            active={mode === 2 ? !done : !done}
             color="#f472b6"
             right
             icon={mode === 1}
@@ -651,9 +728,12 @@ export function Battle({
           >
             <div className="scan-sweep pointer-events-none absolute inset-y-0 w-1/3 bg-linear-to-r from-transparent via-cyan-300/10 to-transparent" />
 
-            {mode === 1 && turn === 'p2' && !done && phase === 'question' && (
-              <div className="mb-1 font-tech text-[10px] font-black tracking-widest text-pink-300 md:text-xs">
-                KOMPUTER BERPIKIR... {aiSecondsLeft ?? computerThinkTime} DETIK
+            {mode === 1 && !done && phase === 'question' && (
+              <div className="mb-1 flex flex-wrap items-center justify-center gap-2 font-tech text-[10px] font-black tracking-widest md:text-xs">
+                <span className="text-pink-300">KOMPUTER IKUT BERLOMBA</span>
+                <span className="rounded-full border border-amber-300/50 bg-amber-400/15 px-2 py-0.5 text-amber-200">
+                  SISA WAKTU {raceSecondsLeft} DETIK
+                </span>
               </div>
             )}
 
@@ -735,7 +815,7 @@ export function Battle({
                   ? 'clamp(80px, min(22vw, 28dvh), 300px)'
                   : 'clamp(90px, min(25vw, 32dvh), 340px)'
               }
-              active={mode === 1 && turn === 'p1' && !done}
+              active={mode === 1 && !done}
               state={stateFor('p1')}
               hp={hp.p1}
               down={downFor('p1')}
@@ -750,7 +830,7 @@ export function Battle({
                   ? 'clamp(80px, min(22vw, 28dvh), 300px)'
                   : 'clamp(90px, min(25vw, 32dvh), 340px)'
               }
-              active={mode === 1 && turn === 'p2' && !done}
+              active={mode === 1 && !done}
               state={stateFor('p2')}
               hp={hp.p2}
               down={downFor('p2')}
@@ -882,7 +962,7 @@ export function Battle({
                 opt={opt}
                 i={i}
                 big
-                disabled={phase !== 'question' || !!done || (mode === 1 && turn !== 'p1')}
+                disabled={phase !== 'question' || !!done}
                 isAnswer={
                   phase === 'resolve' &&
                   picked !== null &&
